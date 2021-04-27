@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <regex.h>
+#include "regex.h"
 
 //Hifistelyidea: tee oma regex-toteutus
 
@@ -15,56 +15,50 @@ int * lex(char *filename)
 
 	static int tokens[256];
 	int i = 0;
-	
-	regex_t regex;
-	int return_value;
 
 	while(fscanf(source, "%s", word)==1)	{
-		return_value = regcomp(&regex, "{", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("{", word))	{
 			tokens[i] = OBRAC;
 			i++;
 		}
 
-		return_value = regcomp(&regex, "}", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("}", word))	{
 			tokens[i] = CBRAC;
 			i++;
 		}
 
-		return_value = regcomp(&regex, "\(", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("\(", word))	{
 			tokens[i] = OPARENT;
 			i++;
 		}
 
-		return_value = regcomp(&regex, "\)", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("\)", word))	{
 			tokens[i] = CPARENT;
 			i++;
 		}
 
-		return_value = regcomp(&regex, ";", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match(";", word))	{
 			tokens[i] = SEMICOL;
 			i++;
 		}
 
-		return_value = regcomp(&regex, "int", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("int", word))	{
 			tokens[i] = INT_KEY;
 			i++;
 		}
 		
-		return_value = regcomp(&regex, "return", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("return", word))	{
 			tokens[i] = RET_KEY;
 			i++;
 		}
 
-		return_value = regcomp(&regex, "[a-zA-Z]\\w", 0);
-		if(regexec(&regex, word, 0, NULL, 0)==0)	{
+		if(match("[:word:]", word))	{
 			tokens[i] = ID;
+			i++;
+		}
+
+		if(match("[:number:]", word))	{
+			tokens[i] = INT_LIT;
 			i++;
 		}
 	}
@@ -75,6 +69,6 @@ int * lex(char *filename)
 main()
 {
 	int *tokens = lex("test_source.c");
-	for(int i=0;i<10;i++)
+	for(int i=0;i<15;i++)
 		printf("%d ", tokens[i]);
 }
