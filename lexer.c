@@ -52,7 +52,7 @@ int * lex(char *filename)
 			i++;
 		}
 
-		if(match("[:word:]", word))	{
+		if(match("[:identifier:]", word))	{
 			tokens[i] = ID;
 			i++;
 		}
