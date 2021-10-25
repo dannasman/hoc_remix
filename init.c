@@ -1,9 +1,8 @@
 #include "numera.h"
 #include "y.tab.h"
 #include <math.h>
-#include <stdlib.h>
 
-extern double Log(), Log10(), Exp(), Sqrt(), integer(), Rand();
+extern double Log(), Log10(), Exp(), Sqrt(), integer(), Rand(), Fmod();
 static struct	{
 	char *name;
 	double cval;
@@ -30,6 +29,7 @@ static struct	{
 	"int", integer,
 	"abs", fabs,
 	"rand", Rand,
+    "fmod", Fmod,
 	0, 0
 };
 init()

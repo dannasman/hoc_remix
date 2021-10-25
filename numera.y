@@ -1,79 +1,48 @@
 %{
 #include<math.h>
 #include "numera.h"
+#define code2(c1, c2)		code(c1); code(c2)
+#define code3(c1, c2, c3)	code(c1); code(c2); code(c3)
 extern double Pow();
 %}
 %union	{
-	double val;
-	char *args;
-	Arg *arg;
 	Symbol *sym;
+	Inst *inst;
+    int narg;
 }
-%token <val> NUMBER
-%token <sym> VAR BLTIN UNDEF
-%type <val> expr asgn
-%type <arg> arg_list
+%token <sym> NUMBER VAR BLTIN UNDEF
+%type <narg> arglist
 %right '='
 %left '+' '-'
 %left '*' '/' '%'
 %left UNARYMINUS
-%left UNARYPLUS
 %right '^'
 %%
 list:
 		| list '\n'
-		| list ';'
-		| list asgn '\n'
-		| list asgn ';'
-		| list expr '\n'	{	printf("\t%.8g\n", $2);	}
-		| list expr ';'
+		| list asgn '\n'	{	code2(pop, STOP); return 1;	}
+		| list expr '\n'	{	code2(print, STOP); return 1;	}
 		| list error '\n'	{	yyerrok;	}
-		| list error ';'	{ 	yyerrok;	}
 		;
-asgn:	VAR '=' expr	{	if(strcmp($1->name, "PI") == 0 || strcmp($1->name, "E") == 0 || strcmp($1->name, "GAMMA") == 0 || strcmp($1->name, "DEG") == 0 || strcmp($1->name, "PHI") == 0)
-								execerror("assignment to constant", "");
-							$$ = $1->u.val=$3; $1->type = VAR;	}
+asgn:	VAR '=' expr	{	code3(varpush, (Inst)$1, assign);	}
 		;
-expr:		NUMBER
-		|	VAR	{	if($1->type == UNDEF)
-						execerror("undefined variable", $1->name);
-					$$ = $1->u.val;	}
+expr:		NUMBER	{	code2(constpush, (Inst)$1);	}
+		|	VAR	{	code3(varpush, (Inst)$1, eval);	}
 		|	asgn
-		|	BLTIN '(' arg_list ')'	{	switch($3->pos)	{
-											case 1:
-												$$ = (*($1->u.ptr))($3->val);
-												break;
-											case 2:
-												$$ = (*($1->u.ptr))($3->val, $3->next->val);
-												break;
-											default:
-												$$ = (*($1->u.ptr))(); 
-										}	}
-		|	'-' expr %prec UNARYMINUS	{	$$ = -$2;	}
-		|	'+' expr %prec UNARYPLUS	{	$$ = $2;	}
-		|	expr '+' expr	{	$$ = $1 + $3;	}
-		|	expr '-' expr	{	$$ = $1 - $3;	}
-		|	expr '*' expr	{	$$ = $1 * $3;	}
-		|	expr '/' expr	{	
-								if($3 == 0.0)
-									execerror("division by zero", "");
-								$$ = $1 / $3;	}
-		|	expr '%' expr	{	$$ = fmod($1, $3);	}
-		|	expr '^' expr	{	$$ = Pow($1, $3);	}
-		|	'(' expr ')'	{	$$ = $2;	}
+		|	BLTIN '(' arglist ')'	{	code3(bltin, (Inst)$3, (Inst)$1->u.ptr);	}
+		|	'(' expr ')'
+		|	expr '+' expr	{	code(add);	}
+		|	expr '-' expr	{	code(sub);	}
+		|	expr '*' expr	{	code(mul);	}
+		|	expr '/' expr	{	code(division);	}
+		|	expr '%' expr	{	code(fmod);	}
+		|	expr '^' expr	{	code(power);	}
+		|	'-' expr %prec UNARYMINUS	{	code(negate);	}
 		;
-arg_list:
-			{	$$ = malloc(sizeof(struct Arg));
-				$$->next = 0;
-				$$->pos = 0;	}
-		|	expr	{	$$ = malloc(sizeof(struct Arg));
-						$$->next = 0;
-						$$->pos = 1;
-						$$->val = $1;	}
-		|	expr ',' arg_list	{	$$ = malloc(sizeof(struct Arg));
-								 	$$->next = $3;
-									$$->pos = $3->pos+1;
-									$$->val = $1;	}
+arglist:    {   $$ = 0;    }
+        |   expr    {   $$ = 1; }
+        |   arglist ',' expr    {   $$ = $1 + 1; }
+        ;
 %%
 
 #include <stdio.h>
@@ -94,7 +63,9 @@ main(argc, argv)
 	init();
 	setjmp(begin);
 	signal(SIGFPE, fpecatch);
-	yyparse();
+	for(initcode(); yyparse(); initcode())
+		execute(prog);
+	return 0;
 }
 
 execerror(s, t)

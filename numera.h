@@ -7,9 +7,17 @@ typedef struct Symbol	{
 	} u;
 	struct Symbol *next;
 } Symbol;
-typedef struct Arg	{
-	double val;
-	int pos;
-	struct Arg *next;
-} Arg;
 Symbol *install(), *lookup();
+
+typedef union Datum	{
+	double val;
+	Symbol *sym;
+} Datum;
+extern Datum pop();
+
+typedef int (*Inst)();
+#define STOP (Inst) 0
+
+extern Inst prog[];
+extern eval(), add(), sub(), mul(), division(), negate(), fmodulus(), power();
+extern assign(), bltin(), varpush(), constpush(), print();

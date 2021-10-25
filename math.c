@@ -1,6 +1,6 @@
 #include <math.h>
-#include <stdlib.h>
 #include <errno.h>
+#include <stdlib.h>
 extern int errno;
 double errcheck();
 
@@ -38,6 +38,11 @@ double Rand()
 	void;
 {
 	return (double)rand()/(double)RAND_MAX;
+}
+double Fmod(x, y)
+    double x, y;
+{
+    return errcheck(fmod(x, y), "remainder");
 }
 double errcheck(d, s)
 	double d;
