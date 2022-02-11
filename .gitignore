@@ -2,3 +2,5 @@
 regex*
 lexer*
 *.o
+*.tab.h
+*.swp
