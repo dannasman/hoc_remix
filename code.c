@@ -21,14 +21,14 @@ struct Prog *pc;
 
 initcode()
 {
-	prog = 0;
+    prog = 0;
     stack = 0;
 }
 
 push(d)
 	Datum d;
 {
-	struct Stack *nptr = malloc(sizeof(struct Stack));
+    struct Stack *nptr = malloc(sizeof(struct Stack));
     nptr->d = d;
     nptr->next = stack;
     stack = nptr;
@@ -77,10 +77,10 @@ execute(p)
 
 constpush()
 {
-	Datum d;
+    Datum d;
     pc = pc->next;
-	d.val = ((Symbol *)pc->f)->u.val;
-	push(d);
+    d.val = ((Symbol *)pc->f)->u.val;
+    push(d);
 }
 
 varpush()
