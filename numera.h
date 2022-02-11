@@ -18,6 +18,6 @@ extern Datum pop();
 typedef int (*Inst)();
 #define STOP (Inst) 0
 
-extern Inst prog[];
+//extern Inst prog[];
 extern eval(), add(), sub(), mul(), division(), negate(), fmodulus(), power();
 extern assign(), bltin(), varpush(), constpush(), print();

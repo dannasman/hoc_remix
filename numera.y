@@ -64,7 +64,7 @@ main(argc, argv)
 	setjmp(begin);
 	signal(SIGFPE, fpecatch);
 	for(initcode(); yyparse(); initcode())
-		execute(prog);
+		execute();
 	return 0;
 }
 

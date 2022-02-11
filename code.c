@@ -2,63 +2,92 @@
 #include "y.tab.h"
 
 #define NSTACK 256
-static Datum stack[NSTACK];
-static Datum *stackp;
+//static Datum stack[NSTACK];
+//static Datum *stackp;
 
-#define NPROG 2000
-Inst prog[NPROG];
-Inst *progp;
-Inst *pc;
+struct Stack    {
+    Datum d;
+    struct Stack *next;
+};
+struct Stack *stack;
+
+struct Prog {
+    Inst f;
+    struct Prog *next;
+    struct Prog *prev;
+};
+struct Prog *prog;
+struct Prog *pc;
 
 initcode()
 {
-	stackp = stack;
-	progp = prog;
+	prog = 0;
+    stack = 0;
 }
 
 push(d)
 	Datum d;
 {
-	if(stackp >= &stack[NSTACK])
-		execerror("stack overflow", (char *) 0);
-	*stackp++ = d;
+	struct Stack *nptr = malloc(sizeof(struct Stack));
+    nptr->d = d;
+    nptr->next = stack;
+    stack = nptr;
 }
 
 Datum pop()
 {
-	if(stackp <= stack)
-		execerror("stack underflow", (char *) 0);
-	return *--stackp;
+	if(stack == 0)
+		execerror("empty stack", (char *) 0);
+    struct Stack *temp;
+    temp = stack;
+    Datum d = temp->d;
+    stack = stack->next;
+    free(temp);
+	return d;
 }
 
 Inst *code(f)
 	Inst f;
 {
-	Inst *oprogp = progp;
-	if(progp >= &prog[NPROG])
-		execerror("program too big", (char*) 0);
-	*progp++ = f;
+    struct Prog *nptr = malloc(sizeof(struct Prog));
+    nptr->f = f;
+    nptr->prev = prog;
+    nptr->next = 0;
+    Inst *oprogp = 0;
+    if(prog != 0)   {
+        prog->next = nptr;
+        oprogp = prog->f;
+    }
+    prog = nptr;
 	return oprogp;
 }
 
 execute(p)
 	Inst *p;
 {
-	for(pc = p; *pc != STOP;)
-		(*(*pc++))();
+    for(pc = prog; pc->prev != 0; pc = pc->prev)
+        ;
+    while(pc->next != 0)    {
+        (*(pc->f))();
+        pc = pc->next;
+    }
+	/*for(pc = prog; pc->next != 0;)
+		(*(*pc++))();*/
 }
 
 constpush()
 {
 	Datum d;
-	d.val = ((Symbol *)*pc++)->u.val;
+    pc = pc->next;
+	d.val = ((Symbol *)pc->f)->u.val;
 	push(d);
 }
 
 varpush()
 {
     Datum d;
-    d.sym = (Symbol *)(*pc++);
+    pc = pc->next;
+    d.sym = (Symbol *)(pc->f);
     push(d);
 }
 
@@ -162,19 +191,23 @@ print()
 bltin()
 {
     Datum d1, d2;
-    int narg = *pc++;
+    pc = pc->next;
+    int narg = pc->f;
     switch(narg)  {
         case 0:
-            d1.val = (*(double (*)())(*pc++))();
+            pc = pc->next;
+            d1.val = (*(double (*)())(pc->f))();
             break;
         case 1:
             d1 = pop();
-            d1.val = (*(double (*)())(*pc++))(d1.val);
+            pc = pc->next;
+            d1.val = (*(double (*)())(pc->f))(d1.val);
             break;
         case 2:
             d2 = pop();
             d1 = pop();
-            d1.val = (*(double (*)())(*pc++))(d1.val, d2.val);
+            pc = pc->next;
+            d1.val = (*(double (*)())(pc->f))(d1.val, d2.val);
             break;
     }
     push(d1);
