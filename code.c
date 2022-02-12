@@ -29,6 +29,8 @@ push(d)
 	Datum d;
 {
     struct Stack *nptr = malloc(sizeof(struct Stack));
+    if(nptr == 0)
+        execerror("memory not allocated", (char *) 0);
     nptr->d = d;
     nptr->next = stack;
     stack = nptr;
@@ -50,6 +52,8 @@ Inst *code(f)
 	Inst f;
 {
     struct Prog *nptr = malloc(sizeof(struct Prog));
+    if(nptr == 0)
+        execerror("memory not allocated", (char *) 0);
     nptr->f = f;
     nptr->prev = prog;
     nptr->next = 0;
