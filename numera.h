@@ -21,3 +21,4 @@ typedef int (*Inst)();
 //extern Inst prog[];
 extern eval(), add(), sub(), mul(), division(), negate(), fmodulus(), power();
 extern assign(), bltin(), varpush(), constpush(), print();
+extern gt(), lt(), eq(), ge(), le(), ne(), and(), or(), not();

@@ -9,20 +9,26 @@ struct Stack    {
     Datum d;
     struct Stack *next;
 };
-struct Stack *stack;
+struct Stack *stack = 0;
 
 struct Prog {
     Inst f;
     struct Prog *next;
     struct Prog *prev;
 };
-struct Prog *prog;
+struct Prog *prog = 0;
 struct Prog *pc;
 
 initcode()
 {
-    prog = 0;
-    stack = 0;
+    if(prog != 0)   {
+        while(prog->prev != 0)  {
+            prog = prog->prev;
+            free(prog->next);
+        }
+        free(prog);
+        prog = 0;
+    }
 }
 
 push(d)
@@ -66,8 +72,7 @@ Inst *code(f)
 	return oprogp;
 }
 
-execute(p)
-	Inst *p;
+execute()
 {
     for(pc = prog; pc->prev != 0; pc = pc->prev)
         ;
@@ -216,3 +221,85 @@ bltin()
     }
     push(d1);
 }
+
+gt()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val > d2.val);
+    push(d1);
+}
+
+lt()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val < d2.val);
+    push(d1);
+}
+
+eq()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val == d2.val);
+    push(d1);
+}
+
+ge()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val >= d2.val);
+    push(d1);
+}
+
+le()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val <= d2.val);
+    push(d1);
+}
+
+ne()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val != d2.val);
+    push(d1);
+}
+
+and()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val != 0.0 && d2.val != 0.0);
+    push(d1);
+}
+
+or()
+{
+    Datum d1, d2;
+    d2 = pop();
+    d1 = pop();
+    d1.val = (double)(d1.val != 0.0 || d2.val != 0.0);
+    push(d1);
+}
+
+not()
+{
+    Datum d;
+    d = pop();
+    d.val = (double)(d.val == 0.0);
+    push(d);
+}
+
+

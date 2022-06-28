@@ -11,11 +11,15 @@ extern double Pow();
     int narg;
 }
 %token <sym> NUMBER VAR BLTIN UNDEF
+%type <inst> asgn expr
 %type <narg> arglist
 %right '='
+%left OR
+%left AND
+%left GT GE LT LE EQ NE
 %left '+' '-'
 %left '*' '/' '%'
-%left UNARYMINUS
+%left UNARYMINUS NOT
 %right '^'
 %%
 list:
@@ -30,7 +34,7 @@ expr:		NUMBER	{	code2(constpush, (Inst)$1);	}
 		|	VAR	{	code3(varpush, (Inst)$1, eval);	}
 		|	asgn
 		|	BLTIN '(' arglist ')'	{	code3(bltin, (Inst)$3, (Inst)$1->u.ptr);	}
-		|	'(' expr ')'
+		|	'(' expr ')'    {   $$ = $2;    }
 		|	expr '+' expr	{	code(add);	}
 		|	expr '-' expr	{	code(sub);	}
 		|	expr '*' expr	{	code(mul);	}
@@ -38,6 +42,15 @@ expr:		NUMBER	{	code2(constpush, (Inst)$1);	}
 		|	expr '%' expr	{	code(fmod);	}
 		|	expr '^' expr	{	code(power);	}
 		|	'-' expr %prec UNARYMINUS	{	code(negate);	}
+        |   expr GT expr    {   code(gt);   }
+        |   expr GE expr    {   code(ge);   }
+        |   expr LT expr    {   code(lt);   }
+        |   expr LE expr    {   code(le);   }
+        |   expr EQ expr    {   code(eq);   }
+        |   expr NE expr    {   code(ne);   }
+        |   expr AND expr   {   code(and);  }
+        |   expr OR expr    {   code(or);   }
+        |   NOT expr        {   $$ = $2; code(not); }
 		;
 arglist:    {   $$ = 0;    }
         |   expr    {   $$ = 1; }
@@ -80,7 +93,7 @@ fpecatch()
 	execerror("floating point exception", (char *) 0);
 }
 
-/*yylex()
+yylex()
 {
 	int c;
 
@@ -89,8 +102,10 @@ fpecatch()
 	if(c == EOF)
 		return 0;
 	if(c == '.' || isdigit(c))	{
-		ungetc(c, stdin);
-		scanf("%lf", &yylval.val);
+        double d;
+        ungetc(c, stdin);
+        scanf("%lf", &d);
+        yylval.sym = install("", NUMBER, d);
 		return NUMBER;
 	}
 	if(c == '\n')
@@ -108,8 +123,28 @@ fpecatch()
 		yylval.sym = s;
 		return s->type == UNDEF ? VAR : s->type;
 	}
+    switch(c)   {
+    case '>':   return follow('=', GE, GT);
+    case '<':   return follow('=', LE, LT);
+    case '=':   return follow('=', EQ, '=');
+    case '!':   return follow('=', NE, NOT);
+    case '|':   return follow('|', OR, '|');
+    case '&':   return follow('&', AND, '&');
+    case '\n':  lineno++; return '\n';
+    default:    return c;
+    }
 	return c;
-}*/
+}
+
+follow(expect, ifyes, ifno)
+{
+    int c = getchar();
+
+    if(c == expect)
+        return  ifyes;
+    ungetc(c, stdin);
+    return ifno;
+}
 
 yyerror(s)
 	char *s;

@@ -1,12 +1,12 @@
 YFLAGS = -d
-OBJS = numera.o code.o lex.o init.o math.o symbol.o
+OBJS = numera.o code.o init.o math.o symbol.o
 
 numera:	$(OBJS)
-		cc $(OBJS) -lm -ll -o numera
+		cc $(OBJS) -lm -o numera
 
-numera.o code.o init.o symbol.o lex.o: numera.h
+numera.o code.o init.o symbol.o: numera.h
 
-code.o lex.o init.o symbol.o: x.tab.h
+code.o init.o symbol.o: x.tab.h
 
 x.tab.h: y.tab.h
 	-cmp -s x.tab.h y.tab.h || cp y.tab.h x.tab.h
