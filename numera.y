@@ -10,8 +10,8 @@ extern double Pow();
 	Inst *inst;
     int narg;
 }
-%token <sym> NUMBER VAR BLTIN UNDEF
-%type <inst> asgn expr
+%token <sym> NUMBER VAR BLTIN UNDEF WHILE
+%type <inst> stmt asgn expr cond while end
 %type <narg> arglist
 %right '='
 %left OR
@@ -24,12 +24,22 @@ extern double Pow();
 %%
 list:
 		| list '\n'
+        | list stmt '\n'    {   code(STOP); return 1;   }
 		| list asgn '\n'	{	code2(pop, STOP); return 1;	}
 		| list expr '\n'	{	code2(print, STOP); return 1;	}
 		| list error '\n'	{	yyerrok;	}
 		;
 asgn:	VAR '=' expr	{	code3(varpush, (Inst)$1, assign);	}
 		;
+stmt:       expr    {   code(pop);  }
+        |   while cond stmt end
+        ;
+cond:   '(' expr ')'    {   code(STOP); $$ = $2;    }
+        ;
+while:  WHILE   {   $$ = code(whilecode);    }
+        ;
+end:        {   code(STOP); }
+   ;
 expr:		NUMBER	{	code2(constpush, (Inst)$1);	}
 		|	VAR	{	code3(varpush, (Inst)$1, eval);	}
 		|	asgn
@@ -77,7 +87,7 @@ main(argc, argv)
 	setjmp(begin);
 	signal(SIGFPE, fpecatch);
 	for(initcode(); yyparse(); initcode())
-		execute();
+		execute(sprog);
 	return 0;
 }
 

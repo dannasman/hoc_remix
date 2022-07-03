@@ -1,10 +1,6 @@
 #include "numera.h"
 #include "y.tab.h"
 
-#define NSTACK 256
-//static Datum stack[NSTACK];
-//static Datum *stackp;
-
 struct Stack    {
     Datum d;
     struct Stack *next;
@@ -17,7 +13,8 @@ struct Prog {
     struct Prog *prev;
 };
 struct Prog *prog = 0;
-struct Prog *pc;
+struct Prog *pc = 0;
+struct Prog *sprog = 0;
 
 initcode()
 {
@@ -28,6 +25,7 @@ initcode()
         }
         free(prog);
         prog = 0;
+        sprog = 0;
     }
 }
 
@@ -68,15 +66,16 @@ Inst *code(f)
         prog->next = nptr;
         oprogp = prog->f;
     }
+    if(prog == 0)   sprog = nptr;
     prog = nptr;
 	return oprogp;
 }
 
-execute()
+execute(p)
+    struct Prog *p;
 {
-    for(pc = prog; pc->prev != 0; pc = pc->prev)
-        ;
-    while(pc->next != 0)    {
+    pc = p;
+    while(pc != 0 && pc->f != STOP)    {
         (*(pc->f))();
         pc = pc->next;
     }
@@ -302,4 +301,25 @@ not()
     push(d);
 }
 
+whilecode()
+{
+    Datum d;
+    struct Prog *condpc;
+    struct Prog *bodypc;
 
+    condpc = pc->next;
+    for(bodypc = condpc; bodypc->f != STOP; bodypc = bodypc->next)
+        ;
+    bodypc = bodypc->next;
+
+    execute(condpc);
+    d = pop();
+    while(d.val)    {
+        execute(bodypc);
+        execute(condpc);
+        d = pop();
+    }
+
+    for(pc = bodypc; pc != 0 && pc->f != STOP; pc = pc->next)
+        ;
+}
