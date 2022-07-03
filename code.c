@@ -308,7 +308,8 @@ whilecode()
     struct Prog *bodypc;
 
     condpc = pc->next;
-    for(bodypc = condpc; bodypc->f != STOP; bodypc = bodypc->next)
+
+    for(bodypc = condpc; bodypc->f != STOP; bodypc = bodypc->next) //not fresh... new data structure coming soon prehaps
         ;
     bodypc = bodypc->next;
 

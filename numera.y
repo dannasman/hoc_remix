@@ -11,7 +11,7 @@ extern double Pow();
     int narg;
 }
 %token <sym> NUMBER VAR BLTIN UNDEF WHILE
-%type <inst> stmt asgn expr cond while end
+%type <inst> stmt asgn expr stmtlist cond while end
 %type <narg> arglist
 %right '='
 %left OR
@@ -33,13 +33,18 @@ asgn:	VAR '=' expr	{	code3(varpush, (Inst)$1, assign);	}
 		;
 stmt:       expr    {   code(pop);  }
         |   while cond stmt end
+        |   '{' stmtlist '}'    {   $$ = $2;    }
         ;
 cond:   '(' expr ')'    {   code(STOP); $$ = $2;    }
         ;
 while:  WHILE   {   $$ = code(whilecode);    }
         ;
 end:        {   code(STOP); }
-   ;
+        ;
+stmtlist:   {   $$ = prog;   }
+        |   stmtlist '\n'
+        |   stmtlist stmt
+        ;
 expr:		NUMBER	{	code2(constpush, (Inst)$1);	}
 		|	VAR	{	code3(varpush, (Inst)$1, eval);	}
 		|	asgn
@@ -118,8 +123,6 @@ yylex()
         yylval.sym = install("", NUMBER, d);
 		return NUMBER;
 	}
-	if(c == '\n')
-		lineno++;
 	if(isalpha(c))	{
 		Symbol *s;
 		char sbuf[100], *p = sbuf;
