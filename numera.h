@@ -23,4 +23,4 @@ extern struct Prog *prog, *sprog;
 extern eval(), add(), sub(), mul(), division(), negate(), fmodulus(), power();
 extern assign(), bltin(), varpush(), constpush(), print();
 extern gt(), lt(), eq(), ge(), le(), ne(), and(), or(), not();
-extern whilecode();
+extern ifcode(), whilecode();

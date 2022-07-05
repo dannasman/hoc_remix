@@ -37,6 +37,8 @@ static struct   {
     int kval;
 } keywords[] = {
     "while", WHILE,
+    "if", IF,
+    "else", ELSE,
      0, 0,
 };
 init()

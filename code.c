@@ -324,3 +324,30 @@ whilecode()
     for(pc = bodypc; pc != 0 && pc->f != STOP; pc = pc->next)
         ;
 }
+
+ifcode()
+{
+    Datum d;
+    struct Prog *condpc;
+    struct Prog *bodypc;
+    struct Prog *elsebodypc;
+
+    condpc = pc->next;
+
+    for(bodypc = condpc; bodypc->f != STOP; bodypc = bodypc->next) //not fresh
+        ;
+    bodypc = bodypc->next;
+
+    for(elsebodypc = bodypc; elsebodypc->f != STOP; elsebodypc = elsebodypc->next) //completely rotten
+        ;
+    elsebodypc = elsebodypc->next;
+
+    execute(condpc);
+    d = pop();
+    if(d.val)
+        execute(bodypc);
+    else if(elsebodypc->f != STOP)
+        execute(elsebodypc);
+    for(pc = elsebodypc; pc != 0 && pc->f != STOP; pc = pc->next)
+        ; 
+}

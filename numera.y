@@ -10,8 +10,8 @@ extern double Pow();
 	Inst *inst;
     int narg;
 }
-%token <sym> NUMBER VAR BLTIN UNDEF WHILE
-%type <inst> stmt asgn expr stmtlist cond while end
+%token <sym> NUMBER VAR BLTIN UNDEF WHILE IF ELSE
+%type <inst> stmt asgn expr stmtlist cond while if end
 %type <narg> arglist
 %right '='
 %left OR
@@ -33,11 +33,15 @@ asgn:	VAR '=' expr	{	code3(varpush, (Inst)$1, assign);	}
 		;
 stmt:       expr    {   code(pop);  }
         |   while cond stmt end
+        |   if cond stmt end    {   code(STOP);   }
+        |   if cond stmt end ELSE stmt end
         |   '{' stmtlist '}'    {   $$ = $2;    }
         ;
 cond:   '(' expr ')'    {   code(STOP); $$ = $2;    }
         ;
 while:  WHILE   {   $$ = code(whilecode);    }
+        ;
+if:     IF      {   $$ = code(ifcode);  }
         ;
 end:        {   code(STOP); }
         ;
