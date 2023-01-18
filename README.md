@@ -7,5 +7,5 @@ make
 ```
 And run the program with command
 ```
-./numera
+./hoc_remix
 ```

@@ -1,5 +1,5 @@
 %{
-#include "numera.h"
+#include "hoc_remix.h"
 #include "y.tab.h"
 extern int lineno; 
 %}
